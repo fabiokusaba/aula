@@ -1,33 +1,33 @@
 package main
 
 import (
-	"net/http"
-	"strconv"
-
+	"github.com/fabiokusaba/aula/shared"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"net/http"
 )
 
 // Estrutura de Student
 type Student struct {
 	// Ao utilizarmos `json:"id"` estamos dizendo que o campo ID será serializado para JSON com o nome "id", desta forma estamos
 	// convertendo os campos para o formato JSON
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Age  int       `json:"age"`
 }
 
 // Slice de Student
 var students = []Student{
-	{ID: 1, Name: "João", Age: 20},
-	{ID: 2, Name: "Maria", Age: 22},
-	{ID: 3, Name: "José", Age: 21},
+	{ID: shared.GetUuid(), Name: "João", Age: 20},
+	{ID: shared.GetUuid(), Name: "Maria", Age: 22},
+	{ID: shared.GetUuid(), Name: "José", Age: 21},
 }
 
 // Funções das rotas
 func routeHeart(c *gin.Context) {
 	// gin.H -> é um map[string]interface{}, ou seja, uma forma genérica de passar dados
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Ok",
+		"message": "ok",
 	})
 
 	c.Done()
@@ -39,14 +39,24 @@ func routeGetStudents(c *gin.Context) {
 
 func routeGetStudentByID(c *gin.Context) {
 	var student Student
-	// Capturando e convertendo o ID da rota para um valor inteiro
-	id, err := strconv.Atoi(c.Param("id"))
+
+	idString := c.Param("id")
+	id, err := shared.GetUuidByString(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"message": "Invalid id",
 		})
 		return
 	}
+
+	// Capturando e convertendo o ID da rota para um valor inteiro
+	//id, err := strconv.Atoi(c.Param("id"))
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 
 	// Percorrendo a lista de students para verificar se o student com o ID informado existe
 	// Existindo o student, retornamos o student encontrado
@@ -57,7 +67,7 @@ func routeGetStudentByID(c *gin.Context) {
 		}
 	}
 
-	if student.ID == 0 {
+	if student.ID == shared.GetUuidEmpty() {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Student not found",
 		})
@@ -82,7 +92,10 @@ func routePostStudent(c *gin.Context) {
 	}
 
 	// Incrementando o ID do novo student
-	student.ID = students[len(students)-1].ID + 1
+	//student.ID = students[len(students)-1].ID + 1
+
+	// Utilizando UUID
+	student.ID = shared.GetUuid()
 
 	// Adicionando o novo student a nossa listagem de students
 	students = append(students, student)
@@ -103,14 +116,24 @@ func routePutStudent(c *gin.Context) {
 		return
 	}
 
-	// Capturando e convertendo o ID da rota para um valor inteiro
-	id, err := strconv.Atoi(c.Param("id"))
+	idString := c.Param("id")
+	id, err := shared.GetUuidByString(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	// Como estamos trabalhando com UUID não precisamos mais fazer a conversão
+	// Capturando e convertendo o ID da rota para um valor inteiro
+	//id, err := strconv.Atoi(c.Param("id"))
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 
 	// Percorrendo a lista de students para verificar se o student com o ID informado existe
 	// Existindo o student, atualizamos os dados do mesmo e retornamos o student atualizado
@@ -121,7 +144,7 @@ func routePutStudent(c *gin.Context) {
 		}
 	}
 
-	if studentFound.ID == 0 {
+	if studentFound.ID == shared.GetUuidEmpty() {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Student not found",
 		})
@@ -147,14 +170,24 @@ func routePutStudent(c *gin.Context) {
 
 func routeDeleteStudent(c *gin.Context) {
 	var newStudents []Student
-	// Capturando e convertendo o ID da rota para um valor inteiro
-	id, err := strconv.Atoi(c.Param("id"))
+
+	idString := c.Param("id")
+	id, err := shared.GetUuidByString(idString)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	// Capturando e convertendo o ID da rota para um valor inteiro
+	//id, err := strconv.Atoi(c.Param("id"))
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 
 	// Percorrendo a lista de students para verificar se o student com o ID informado existe
 	// Existindo o student, removemos o mesmo da lista e retornamos uma resposta de sucesso
