@@ -2,7 +2,7 @@ package students
 
 import (
 	"github.com/fabiokusaba/aula/api/controller"
-	"github.com/fabiokusaba/aula/entities"
+	student_usecase "github.com/fabiokusaba/aula/usecase/student"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -14,8 +14,11 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	student := entities.NewStudent(input.FullName, input.Age)
-	entities.Students = append(entities.Students, *student)
+	student, err := student_usecase.CreateStudent(input.FullName, input.Age)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.NewResponseMessageError(err.Error()))
+		return
+	}
 
 	c.JSON(http.StatusCreated, student)
 }

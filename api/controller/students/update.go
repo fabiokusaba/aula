@@ -2,16 +2,14 @@ package students
 
 import (
 	"github.com/fabiokusaba/aula/api/controller"
-	"github.com/fabiokusaba/aula/entities"
 	"github.com/fabiokusaba/aula/entities/shared"
+	student_usecase "github.com/fabiokusaba/aula/usecase/student"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func Update(c *gin.Context) {
 	var input Input
-	var studentFound entities.Student
-	var newStudents []entities.Student
 
 	if err := c.Bind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, controller.NewResponseMessageError(err.Error()))
@@ -25,28 +23,11 @@ func Update(c *gin.Context) {
 		return
 	}
 
-	for _, studentElement := range entities.Students {
-		if studentElement.ID == id {
-			studentFound = studentElement
-		}
-	}
-
-	if studentFound.ID == shared.GetUuidEmpty() {
-		c.JSON(http.StatusBadRequest, controller.NewResponseMessageError("student not found"))
+	student, err := student_usecase.UpdateStudent(id, input.FullName, input.Age)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.NewResponseMessageError(err.Error()))
 		return
 	}
 
-	studentFound.FullName = input.FullName
-	studentFound.Age = input.Age
-
-	for _, studentElement := range entities.Students {
-		if studentElement.ID == studentFound.ID {
-			newStudents = append(newStudents, studentFound)
-		} else {
-			newStudents = append(newStudents, studentElement)
-		}
-	}
-
-	entities.Students = newStudents
-	c.JSON(http.StatusOK, studentFound)
+	c.JSON(http.StatusOK, student)
 }

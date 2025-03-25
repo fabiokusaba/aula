@@ -4,6 +4,7 @@ import (
 	"github.com/fabiokusaba/aula/api/controller"
 	"github.com/fabiokusaba/aula/entities"
 	"github.com/fabiokusaba/aula/entities/shared"
+	student_usecase "github.com/fabiokusaba/aula/usecase/student"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -18,14 +19,9 @@ func Details(c *gin.Context) {
 		return
 	}
 
-	for _, studentElement := range entities.Students {
-		if studentElement.ID == id {
-			studentFound = studentElement
-		}
-	}
-
-	if studentFound.ID == shared.GetUuidEmpty() {
-		c.JSON(http.StatusBadRequest, controller.NewResponseMessageError("student not found"))
+	studentFound, err = student_usecase.SearchStudentByID(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.NewResponseMessageError(err.Error()))
 		return
 	}
 
